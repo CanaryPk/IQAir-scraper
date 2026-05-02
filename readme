@@ -1,0 +1,69 @@
+/******************************/
+/******** DEPENDENCIAS ********/
+/******************************/
+
+El script de extracción de información de IQAir se ha programado en JavaScript utilizando NodeJS.
+Si no tiene NodeJS, los pasos a seguir en Linux son los siguientes:
+    1. Instalar NVM. Para usar NodeJs en Linux usaremos nvm (Node Version Manager), que facilitará el trabajo considerablemente. 
+                     Para ello instalamos nvm en primera instancia ejecutando el siguiente comando:
+                        wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+                        (más información en https://github.com/nvm-sh/nvm#install--update-script)
+
+    2. Instalar NodeJS. Una vez instalado nvm, cerramos la terminal, abrimos una nueva y ejecutamos el siguiente comando:
+                            nvm install node
+                        Finalmente, para establecer la versión que queremos usar ejecutamos el siguiente comando:
+                            nvm use node
+                        Por último, verificamos la correcta instalación:
+                            node -v
+                            npm -v
+
+/*******************************/
+/********** EJECUCIÓN **********/
+/*******************************/
+
+Una vez instalado NodeJS, para ejecutar el fichero "scrape.js" asegúrese primero de instalar las dependencias del script 
+escribiendo en la terminal:
+    npm install
+
+Para ejecutar el script, basta con escribir en una terminal:
+    node scrape.js
+
+Si revisa el código dentro de "scrape.js", verá que en la función principal (la de abajo del todo) se pasa el booleano "verbose" 
+a la función "explore()". Esto es para mostrar progresivamente qué encuentra el "scraper" durante su ejecución. Puede ponerlo a 
+"false" si prefiere acelerar la ejecución. 
+
+A medida que se avanza por la estructura de países, estados y ciudades de IQAir se irá imprimiendo información en el fichero 
+"air_pollution_data.json", que contiene por cada línea la información de cada ciudad. Los datos guardados son:
+    País
+    Estado
+    Ciudad
+    https://www.iqair.com/País/Estado/Ciudad/
+    Timestamp (cuándo se ha registrado la línea del JSON)
+    Puntuación AQI
+    Temperatura
+    Velocidad del viento
+    Humedad
+    Contaminantes (los que se puedan registrar en la estación, hasta seis diferentes: PM2.5, PM10, O3, NO2, SO2 y CO)
+
+He tratado de comentar el código lo máximo posible para asegurar claridad, dado que JavaScript puede resultar algo confuso en este 
+contexto (al menos, ese ha sido mi caso). Los comentarios están en inglés para asegurar que un mayor porcentaje de usuarios puede 
+trabajar con el script. Cualquier duda, de igual modo, la puede remitir a: santiago.sanchezloureiro@alum.uca.es
+
+Finalmente, este script no permite obtener la información de un país en específico en primera instancia. Si desea tal cosa, puede
+añadir un 
+    "if(country.url == url/al/pais/deseado)",
+en la función "explore()" justo al comienzo del primer bucle (y englobe su contenido). De esta manera, se ignoran todos los países 
+excepto el deseado por el usuario.
+    Nota: recomiendo utilizar la URL del país en lugar de su nombre porque variar según el idioma del dispositivo.
+
+/********************************/
+/********** COMENTARIO **********/
+/********************************/
+
+He elegido JavaScript porque, tras realizar varias pruebas y compararlo con Python, a pesar de la curva de dificultad ofrecía 
+tiempos de ejecución algo mejores.
+
+¡Eso es todo! 
+
+Santiago Sánchez Loureiro | Grado en Ingeniería Informática | Universidad de Cádiz
+
