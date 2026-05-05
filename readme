@@ -2,8 +2,7 @@
 /******** DEPENDENCIAS ********/
 /******************************/
 
-El script de extracción de información de IQAir se ha programado en JavaScript utilizando NodeJS.
-Si no tiene NodeJS, los pasos a seguir en Linux son los siguientes:
+El script de extracción de información de IQAir se ha programado en JavaScript utilizando NodeJS. Si no tiene NodeJS, los pasos a seguir en Linux son los siguientes:
     1. Instalar NVM. Para usar NodeJs en Linux usaremos nvm (Node Version Manager), que facilitará el 
                      trabajo considerablemente. Para ello instalamos nvm en primera instancia 
                      ejecutando el siguiente comando:
@@ -32,7 +31,7 @@ Para ejecutar el script, basta con escribir en una terminal:
 Si revisa el código dentro de "scrape.js", verá que en la función principal (la de abajo del todo) se pasa el booleano "verbose" a la función "explore()". Esto es para mostrar progresivamente qué encuentra el "scraper" durante su ejecución. Puede ponerlo a "false" si prefiere acelerar la ejecución. 
 
 A medida que se avanza por la estructura de países, estados y ciudades de IQAir se irá imprimiendo información en el fichero 
-"air_pollution_data.json", que contiene por cada línea la información de cada ciudad. Los datos guardados son:
+"air_pollution_data.json", que contiene en cada línea la información de cada ciudad. Los datos guardados son:
     País
     Estado
     Ciudad
@@ -48,8 +47,8 @@ He tratado de comentar el código lo máximo posible para asegurar claridad, dad
 
 Finalmente, este script no permite obtener la información de un país en específico en primera instancia. Si desea tal cosa, puede añadir un 
     "if(country.url == url/al/pais/deseado)",
-en la función "explore()" justo al comienzo del primer bucle (y englobe su contenido). De esta manera, se ignoran todos los países excepto el deseado por el usuario.
-    Nota: recomiendo utilizar la URL del país en lugar de su nombre porque variar según el idioma del dispositivo.
+en la función "explore()" justo al comienzo del primer bucle (y que englobe su contenido). De esta manera, se ignoran todos los países excepto el deseado por el usuario.
+    Nota: recomiendo utilizar la URL del país en lugar de su nombre porque puede variar según el idioma del dispositivo.
 
 /********************************/
 /********** COMENTARIO **********/
