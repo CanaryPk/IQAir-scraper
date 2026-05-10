@@ -9,6 +9,51 @@ const BASE_URL = "https://www.iqair.com/";
  * Web navigation *
  ******************/
 
+// Helper function. Idles for a specified amount of time.
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Helper function to make navigation more "human". Instead of instantly visiting each site, wait random intervals.
+async function randomDelay(min = 1000, max = 5000) {
+  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+  //console.log("Waiting " + delay +  "ms...");
+  await sleep(delay);
+}
+
+// Centralizes navigation logic in order to support random timers.
+async function safeGoto(page, url, retries = 5) {
+  for(let attempt = 1; attempt <= retries; ++attempt) {
+    try {
+      await randomDelay(2000, 8000);
+
+      const response = await page.goto(url, {waitUntil: "domcontentloaded", timeout: 30000}); // Wait 30 seconds for the page to load.
+      const status = response.status;
+
+      if (!response)
+        throw new Error("No response.");
+
+      if (status === 403 || status === 429) 
+        throw new Error("Blocked or rate limited | Status: " + status +  " | At: " + url);
+
+      return response;
+    }
+    catch(err) { // Retry if something happens.
+      console.log("Error: " + err.message);
+
+      if (attempt === retries) // Stop execution with enough retries.
+        throw err;
+
+      // Exponential backoff.
+      const backoff = Math.pow(2, attempt) * 2000;
+
+      console.log("Retrying in " + backoff + "ms...");
+
+      await sleep(backoff);
+    }
+  }
+}
+
 // Get all countries in the main IQAir website: https://www.iqair.com/es/world-air-quality
 async function getCountries(page) {
   return await page.evaluate(() => {
@@ -69,6 +114,7 @@ async function getFirstColumnData(page) {
     // Get all text elements inside the first column.
     const texts = Array.from(firstColumn.querySelectorAll("p")).map(p => p.textContent.trim()).filter(Boolean);
 
+    console.log(texts);
     return { // texts[0] is the title of the column. Irrelevant to us.
       aqi: texts[1],
       temperature: texts[2],
@@ -129,32 +175,25 @@ async function explore(browser, countries, verbose) {
   let i = 0;
   for (const country of countries) {
     //if(country.url == IQAir/url/to/specific/country) { // Uncomment and adapt in case a specific country is desired.
-    const response = await countryPage.goto(country.url, { waitUntil: "domcontentloaded" });
+    const response = await safeGoto(countryPage, country.url);
     if(verbose) console.log(i + ". Reached " + country.name + " | Connection status: " + response.status());
     i++;
-    
-    // Check response when loading into a country's page.
-    if (response.status() === 403 || response.status() === 429)
-      throw new Error("[AlumnoColab/other/air_quality/js/test.js:explore()] Blocked or rate limited in " + country.name + ":" + country.url);
 
     // Iterate through each state and city within the states.
     const states = await getStates(countryPage, country.url);
     if(verbose) console.log("   Found " + states.length + " states.");
 
     for (const state of states) { // For each state...
-      const stateRes = await countryPage.goto(state.url, { waitUntil: "domcontentloaded" });
+      const stateRes = await safeGoto(countryPage, state.url);
       if(verbose) console.log("      +) State: " + state.name + "| Status: " + stateRes.status());
-
-      if (stateRes.status() === 403 || stateRes.status() === 429)
-        throw new Error("Blocked at state: " + state.name);
 
       const cities = await getCities(countryPage, state.url);
       if(verbose) console.log("         Found " + cities.length + " cities.");
 
       for (const city of cities) { // For each city within a state...
-        await countryPage.goto(city.url, { waitUntil: "domcontentloaded" });
+        const cityRes = await safeGoto(countryPage, city.url);
         if(verbose) console.log("            -) City: " + city.name);
-        
+
         // First weather column: AQI score, temperature, wind speed and humidity. 
         let columnData = await getFirstColumnData(countryPage);
       	if(verbose) {
@@ -185,11 +224,7 @@ async function explore(browser, countries, verbose) {
           pollutantData
         };
 
-        await fs.appendFile(
-          'air_pollution_data.json', 
-          JSON.stringify(data) + '\n', 
-          'utf-8'
-        );
+        await fs.appendFile('air_pollution_data.json', JSON.stringify(data) + '\n', 'utf-8');
       }
     }
   //}
@@ -201,7 +236,7 @@ async function explore(browser, countries, verbose) {
   const page = await browser.newPage();
 
   try {
-    console.time("[./air_quality/js/test.js] Elapsed time"); // console.time and console.timeEnd parameters must match.
+    console.time("[scrape.js] Elapsed time"); // console.time and console.timeEnd parameters must match.
 
     // Emulate a real user to avoid immediate blocking.
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...');
@@ -216,7 +251,7 @@ async function explore(browser, countries, verbose) {
     // Loop over all state and city links for each country. Throw errors if connection fails at some point.
     await explore(browser, countries, verbose);
 
-    console.timeEnd("[./air_quality/js/test.js] Elapsed time");
+    console.timeEnd("[scrape.js] Elapsed time");
     
   } catch (err) {
     console.error('Scraping failed:', err);
